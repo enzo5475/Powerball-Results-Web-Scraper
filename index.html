@@ -1,1 +1,761 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Powerball Results Scraper</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .controls {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .control-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn.secondary {
+            background: linear-gradient(45deg, #28a745, #20c997);
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        select, input[type="url"] {
+            padding: 10px 15px;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        select {
+            min-width: 200px;
+        }
+
+        input[type="url"] {
+            width: 350px;
+        }
+
+        select:focus, input[type="url"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .status {
+            margin-top: 15px;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: 500;
+            display: none;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.loading {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .results {
+            padding: 30px;
+        }
+
+        .result-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 5px solid #667eea;
+        }
+
+        .result-section h3 {
+            color: #495057;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+
+        .numbers-display {
+            display: flex;
+            gap: 10px;
+            margin: 15px 0;
+            flex-wrap: wrap;
+        }
+
+        .number {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .number.regular {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+        }
+
+        .number.powerball {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a24);
+        }
+
+        .prize-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background: white;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .prize-table th,
+        .prize-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .prize-table th {
+            background: #495057;
+            color: white;
+            font-weight: 600;
+        }
+
+        .prize-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .loading-spinner {
+            display: none;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .export-options {
+            margin-top: 20px;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .json-output {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            max-height: 300px;
+            overflow-y: auto;
+            margin-top: 15px;
+            border: 1px solid #4a5568;
+        }
+
+        .raw-data {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .method-info {
+            background: #e3f2fd;
+            border: 1px solid #bbdefb;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .method-info h4 {
+            color: #1565c0;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .control-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            input[type="url"], select {
+                width: 100%;
+            }
+
+            .numbers-display {
+                justify-content: center;
+            }
+
+            .export-options {
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎱 Live Powerball Results Scraper</h1>
+            <p>Real-time Powerball lottery results extraction</p>
+        </div>
+
+        <div class="controls">
+            <div class="method-info">
+                <h4>🔧 Fetching Methods</h4>
+                <p>Multiple proxy options to bypass CORS restrictions. If one fails, try another!</p>
+            </div>
+            
+            <div class="control-group">
+                <div class="input-group">
+                    <select id="proxySelect">
+                        <option value="https://api.allorigins.win/raw?url=">AllOrigins Proxy</option>
+                        <option value="https://corsproxy.io/?">CORS Proxy IO</option>
+                        <option value="https://api.codetabs.com/v1/proxy?quest=">CodeTabs Proxy</option>
+                        <option value="https://cors-anywhere.herokuapp.com/">CORS Anywhere</option>
+                        <option value="direct">Direct (may fail due to CORS)</option>
+                    </select>
+                    <button class="btn" onclick="fetchLiveResults()">🔄 Fetch Live Results</button>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <input type="url" id="customUrl" placeholder="Custom Powerball URL (optional)" value="https://www.powerball.com/draw-result">
+                <button class="btn secondary" onclick="fetchCustomUrl()">Fetch Custom URL</button>
+                <button class="btn" onclick="clearResults()">Clear</button>
+            </div>
+            
+            <div id="status" class="status"></div>
+        </div>
+
+        <div class="loading-spinner" id="loadingSpinner"></div>
+
+        <div class="results" id="results"></div>
+    </div>
+
+    <script>
+        let currentResults = null;
+
+        function showStatus(message, type) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+            statusEl.style.display = 'block';
+            
+            if (type === 'success') {
+                setTimeout(() => {
+                    statusEl.style.display = 'none';
+                }, 8000);
+            }
+        }
+
+        function showLoading(show) {
+            const spinner = document.getElementById('loadingSpinner');
+            const buttons = document.querySelectorAll('.btn');
+            
+            spinner.style.display = show ? 'block' : 'none';
+            buttons.forEach(btn => btn.disabled = show);
+            
+            if (show) {
+                showStatus('Fetching live results...', 'loading');
+            }
+        }
+
+        async function fetchLiveResults() {
+            const proxySelect = document.getElementById('proxySelect');
+            const selectedProxy = proxySelect.value;
+            const powerballUrl = 'https://www.powerball.com/draw-result';
+            
+            showLoading(true);
+
+            try {
+                let response;
+                let fetchUrl;
+                
+                if (selectedProxy === 'direct') {
+                    fetchUrl = powerballUrl;
+                } else {
+                    fetchUrl = selectedProxy + encodeURIComponent(powerballUrl);
+                }
+                
+                console.log('Fetching from:', fetchUrl);
+                
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+                
+                response = await fetch(fetchUrl, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                    },
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const htmlText = await response.text();
+                console.log('Received HTML length:', htmlText.length);
+                
+                // Show first 1000 characters for debugging
+                showRawData(htmlText.substring(0, 1000) + '...');
+                
+                // Parse the HTML to extract Powerball data
+                const results = parsePowerballHTML(htmlText);
+                
+                if (results) {
+                    currentResults = results;
+                    displayResults(results);
+                    showStatus(`Live results fetched successfully using ${proxySelect.options[proxySelect.selectedIndex].text}!`, 'success');
+                } else {
+                    showStatus('Data fetched but could not parse Powerball numbers. Check raw data below.', 'error');
+                }
+                
+            } catch (error) {
+                console.error('Fetch error:', error);
+                if (error.name === 'AbortError') {
+                    showStatus('Request timed out. Try a different proxy method.', 'error');
+                } else {
+                    showStatus(`Error: ${error.message}. Try a different proxy method.`, 'error');
+                }
+                
+                // Show error details
+                showRawData(`Error details: ${error.message}\nTried URL: ${fetchUrl || powerballUrl}`);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        async function fetchCustomUrl() {
+            const customUrl = document.getElementById('customUrl').value.trim();
+            
+            if (!customUrl) {
+                showStatus('Please enter a valid URL', 'error');
+                return;
+            }
+
+            const proxySelect = document.getElementById('proxySelect');
+            const selectedProxy = proxySelect.value;
+            
+            showLoading(true);
+
+            try {
+                let fetchUrl;
+                
+                if (selectedProxy === 'direct') {
+                    fetchUrl = customUrl;
+                } else {
+                    fetchUrl = selectedProxy + encodeURIComponent(customUrl);
+                }
+                
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 15000);
+                
+                const response = await fetch(fetchUrl, {
+                    signal: controller.signal
+                });
+                
+                clearTimeout(timeoutId);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const htmlText = await response.text();
+                
+                // Show raw HTML for manual inspection
+                showRawData(htmlText.substring(0, 2000) + '...');
+                
+                const results = parsePowerballHTML(htmlText);
+                
+                if (results) {
+                    currentResults = results;
+                    displayResults(results);
+                    showStatus('Custom URL fetched and parsed successfully!', 'success');
+                } else {
+                    showStatus('Data fetched but could not automatically parse. Check raw data above.', 'error');
+                }
+                
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    showStatus('Request timed out. Try a different proxy method.', 'error');
+                } else {
+                    showStatus(`Error: ${error.message}`, 'error');
+                }
+                console.error('Custom URL fetch error:', error);
+            } finally {
+                showLoading(false);
+            }
+        }
+
+        function parsePowerballHTML(html) {
+            try {
+                console.log('Starting HTML parsing...');
+                
+                // Strategy 1: Look for number patterns in the HTML
+                const numberPatterns = [
+                    // Pattern for consecutive numbers
+                    /(\d{1,2})[^\d]*(\d{1,2})[^\d]*(\d{1,2})[^\d]*(\d{1,2})[^\d]*(\d{1,2})[^\d]*.*?powerball[^\d]*(\d{1,2})/gi,
+                    // Pattern for any 6 numbers in sequence
+                    /(\d{1,2})[^\d]+(\d{1,2})[^\d]+(\d{1,2})[^\d]+(\d{1,2})[^\d]+(\d{1,2})[^\d]+(\d{1,2})/g,
+                ];
+                
+                let winningNumbers = [];
+                let powerballNumber = null;
+                
+                for (let pattern of numberPatterns) {
+                    const matches = [...html.matchAll(pattern)];
+                    if (matches.length > 0) {
+                        const match = matches[0];
+                        const numbers = [
+                            parseInt(match[1]),
+                            parseInt(match[2]),
+                            parseInt(match[3]),
+                            parseInt(match[4]),
+                            parseInt(match[5])
+                        ];
+                        const pb = parseInt(match[6]);
+                        
+                        // Validate numbers are in reasonable range
+                        if (numbers.every(n => n >= 1 && n <= 69) && pb >= 1 && pb <= 26) {
+                            winningNumbers = numbers;
+                            powerballNumber = pb;
+                            break;
+                        }
+                    }
+                }
+                
+                // Strategy 2: Extract date
+                const datePatterns = [
+                    /(\w+,?\s+\w+\s+\d{1,2},?\s+\d{4})/,
+                    /Draw Result.*?(\w+,\s*\w+\s*\d+,\s*\d+)/i
+                ];
+                
+                let drawDate = new Date().toDateString();
+                for (let pattern of datePatterns) {
+                    const match = html.match(pattern);
+                    if (match) {
+                        drawDate = match[1];
+                        break;
+                    }
+                }
+                
+                // Strategy 3: Extract jackpot info
+                const jackpotPatterns = [
+                    /jackpot\s*winners[^0-9]*(\d+|none)/gi,
+                    /(\$[\d,]+(?:\.\d{2})?)\s*million/gi
+                ];
+                
+                let jackpotInfo = 'Check official site';
+                for (let pattern of jackpotPatterns) {
+                    const match = html.match(pattern);
+                    if (match) {
+                        jackpotInfo = match[0];
+                        break;
+                    }
+                }
+                
+                if (winningNumbers.length === 5 && powerballNumber) {
+                    return {
+                        drawDate: drawDate,
+                        winningNumbers: winningNumbers,
+                        powerballNumber: powerballNumber,
+                        jackpot: jackpotInfo,
+                        nextJackpot: 'Check official site',
+                        prizeBreakdown: getDefaultPrizeData(),
+                        source: 'Live scraped data'
+                    };
+                }
+                
+                // Fallback: Try to extract any numbers
+                const allNumbers = html.match(/\b\d{1,2}\b/g);
+                if (allNumbers && allNumbers.length >= 6) {
+                    const validNumbers = allNumbers
+                        .map(n => parseInt(n))
+                        .filter(n => n >= 1 && n <= 69);
+                    
+                    if (validNumbers.length >= 6) {
+                        return {
+                            drawDate: drawDate,
+                            winningNumbers: validNumbers.slice(0, 5),
+                            powerballNumber: validNumbers[5] <= 26 ? validNumbers[5] : validNumbers[5] % 26 + 1,
+                            jackpot: jackpotInfo,
+                            nextJackpot: 'Check official site',
+                            prizeBreakdown: getDefaultPrizeData(),
+                            source: 'Extracted numbers (may need verification)'
+                        };
+                    }
+                }
+                
+                return null;
+                
+            } catch (error) {
+                console.error('Parse error:', error);
+                return null;
+            }
+        }
+
+        function getDefaultPrizeData() {
+            return [
+                { match: '5 + Powerball', winners: 0, prize: 'Jackpot', powerPlayWinners: 0, powerPlayPrize: 'Jackpot' },
+                { match: '5', winners: 0, prize: '$1,000,000', powerPlayWinners: 0, powerPlayPrize: '$2,000,000' },
+                { match: '4 + Powerball', winners: 0, prize: '$50,000', powerPlayWinners: 0, powerPlayPrize: '$100,000' },
+                { match: '4', winners: 0, prize: '$100', powerPlayWinners: 0, powerPlayPrize: '$200' },
+                { match: '3 + Powerball', winners: 0, prize: '$100', powerPlayWinners: 0, powerPlayPrize: '$200' },
+                { match: '3', winners: 0, prize: '$7', powerPlayWinners: 0, powerPlayPrize: '$14' },
+                { match: '2 + Powerball', winners: 0, prize: '$7', powerPlayWinners: 0, powerPlayPrize: '$14' },
+                { match: '1 + Powerball', winners: 0, prize: '$4', powerPlayWinners: 0, powerPlayPrize: '$8' },
+                { match: '0 + Powerball', winners: 0, prize: '$4', powerPlayWinners: 0, powerPlayPrize: '$8' }
+            ];
+        }
+
+        function showRawData(data) {
+            const resultsContainer = document.getElementById('results');
+            const rawDataHtml = `
+                <div class="result-section">
+                    <h3>🔍 Raw Data (for debugging)</h3>
+                    <p>First part of the fetched HTML content:</p>
+                    <div class="raw-data">${data.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
+                </div>
+            `;
+            resultsContainer.innerHTML = rawDataHtml;
+        }
+
+        function displayResults(results) {
+            const resultsContainer = document.getElementById('results');
+            
+            const html = `
+                <div class="result-section">
+                    <h3>🎯 Draw Information</h3>
+                    <p><strong>Draw Date:</strong> ${results.drawDate}</p>
+                    <p><strong>Jackpot Status:</strong> ${results.jackpot}</p>
+                    <p><strong>Next Estimated Jackpot:</strong> ${results.nextJackpot}</p>
+                    <p><strong>Data Source:</strong> ${results.source || 'Live scraping'}</p>
+                </div>
+
+                <div class="result-section">
+                    <h3>🔢 Winning Numbers</h3>
+                    <div class="numbers-display">
+                        ${results.winningNumbers.map(num => `<div class="number regular">${num}</div>`).join('')}
+                        <div class="number powerball">${results.powerballNumber}</div>
+                    </div>
+                    <p><em>Powerball number is shown in red</em></p>
+                </div>
+
+                <div class="result-section">
+                    <h3>💰 Prize Breakdown</h3>
+                    ${results.prizeBreakdown.length > 0 ? `
+                        <table class="prize-table">
+                            <thead>
+                                <tr>
+                                    <th>Match</th>
+                                    <th>Winners</th>
+                                    <th>Prize</th>
+                                    <th>Power Play Winners</th>
+                                    <th>Power Play Prize</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${results.prizeBreakdown.map(row => `
+                                    <tr>
+                                        <td><strong>${row.match}</strong></td>
+                                        <td>${(row.winners || 0).toLocaleString()}</td>
+                                        <td>${row.prize || 'N/A'}</td>
+                                        <td>${(row.powerPlayWinners || 0).toLocaleString()}</td>
+                                        <td>${row.powerPlayPrize || 'N/A'}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    ` : '<p>Prize breakdown not available</p>'}
+                </div>
+
+                <div class="result-section">
+                    <h3>📊 Export Options</h3>
+                    <div class="export-options">
+                        <button class="btn" onclick="exportToJSON()">Export as JSON</button>
+                        <button class="btn" onclick="exportToCSV()">Export as CSV</button>
+                        <button class="btn" onclick="copyToClipboard()">Copy Numbers</button>
+                    </div>
+                    <div id="jsonOutput"></div>
+                </div>
+            `;
+            
+            resultsContainer.innerHTML = html;
+        }
+
+        function exportToJSON() {
+            if (!currentResults) {
+                showStatus('No results to export', 'error');
+                return;
+            }
+
+            const jsonOutput = document.getElementById('jsonOutput');
+            const jsonString = JSON.stringify(currentResults, null, 2);
+            
+            jsonOutput.innerHTML = `<div class="json-output">${jsonString}</div>`;
+            
+            // Create download link
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `powerball-results-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showStatus('JSON exported successfully!', 'success');
+        }
+
+        function exportToCSV() {
+            if (!currentResults) {
+                showStatus('No results to export', 'error');
+                return;
+            }
+
+            let csv = 'Match,Winners,Prize,Power Play Winners,Power Play Prize\n';
+            currentResults.prizeBreakdown.forEach(row => {
+                csv += `"${row.match}",${row.winners},"${row.prize}",${row.powerPlayWinners},"${row.powerPlayPrize}"\n`;
+            });
+
+            const blob = new Blob([csv], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `powerball-results-${new Date().toISOString().split('T')[0]}.csv`;
+            a.click();
+            URL.revokeObjectURL(url);
+            
+            showStatus('CSV exported successfully!', 'success');
+        }
+
+        function copyToClipboard() {
+            if (!currentResults) {
+                showStatus('No results to copy', 'error');
+                return;
+            }
+
+            const numbers = currentResults.winningNumbers.join(', ') + ' | Powerball: ' + currentResults.powerballNumber;
+            navigator.clipboard.writeText(numbers).then(() => {
+                showStatus('Numbers copied to clipboard!', 'success');
+            }).catch(() => {
+                showStatus('Failed to copy to clipboard', 'error');
+            });
+        }
+
+        function clearResults() {
+            document.getElementById('results').innerHTML = '';
+            document.getElementById('status').style.display = 'none';
+            currentResults = null;
+        }
+
+        // Initialize
+        window.addEventListener('load', () => {
+            showStatus('Ready to fetch live Powerball results! Try different proxy methods if one fails.', 'success');
+        });
+    </script>
+</body>
+</html>

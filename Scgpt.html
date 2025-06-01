@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Latest Powerball Numbers</title>
+</head>
+<body>
+  <h1>Latest Powerball Winning Numbers</h1>
+  <div id="results">Loading...</div>
+
+  <script>
+    async function getLatestPowerballNumbers() {
+      const url = "https://data.ny.gov/api/views/d6yy-54nr/rows.json";
+      try {
+        const res = await fetch(url);
+        const data = await res.json();
+
+        // Get rows array
+        const rows = data.data;
+
+        // First row is the most recent draw
+        const latest = rows[0];
+
+        // Extract relevant info - date, numbers, Powerball
+        const drawDate = latest[8];
+        const numbers = latest[9];
+        const powerball = latest[10];
+        const powerplay = latest[11];
+
+        document.getElementById('results').innerHTML = `
+          <strong>Draw Date:</strong> ${drawDate}<br>
+          <strong>Winning Numbers:</strong> ${numbers}<br>
+          <strong>Powerball:</strong> ${powerball}<br>
+          <strong>Power Play:</strong> ${powerplay}
+        `;
+      } catch (err) {
+        document.getElementById('results').textContent = "Failed to load data.";
+        console.error(err);
+      }
+    }
+
+    getLatestPowerballNumbers();
+  </script>
+</body>
+</html>
